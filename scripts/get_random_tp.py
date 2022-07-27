@@ -1,3 +1,7 @@
+"""
+get random index a number of TP image from TP each class
+"""
+
 import glob
 import os
 import pandas as pd
@@ -43,5 +47,6 @@ def get_rd_tp(type="glasses"):
 
 if __name__ == "__main__":
     # get_rd_tp(type="glasses")
+    NUMBER = 2000
     get_rd_tp(type="mask")
-    get_rd_tp(type="normal")
+    # get_rd_tp(type="normal")

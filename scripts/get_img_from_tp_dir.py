@@ -1,3 +1,6 @@
+"""
+after get random index, get TP image
+"""
 import os 
 import pandas as pd
 import shutil

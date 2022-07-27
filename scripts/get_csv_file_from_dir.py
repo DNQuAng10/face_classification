@@ -1,3 +1,6 @@
+"""
+Statistics number of image 
+"""
 import argparse
 import glob
 import os

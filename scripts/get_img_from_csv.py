@@ -1,3 +1,6 @@
+"""
+after get random index, get image
+"""
 import os
 import pandas as pd
 import shutil

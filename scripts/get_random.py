@@ -1,3 +1,7 @@
+"""
+get random index a image on each session in dataset
+"""
+
 import glob
 import os
 import pandas as pd
