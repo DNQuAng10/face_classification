@@ -16,6 +16,9 @@ CWD = pathlib.Path(__file__).resolve().parent
 # from modules.TDDFA.TDDFA import TDDFA_Blob
 from sklearn.metrics import precision_score, recall_score, confusion_matrix, classification_report
 
+
+CLASSES = ["glasses", "mask", "normal"]
+
 def multitask_to_true_false_cases(file_path, output, dict_results: dict=None, list_pred: list=None):
     # glasses, mask, normal = 0, 1, 2
     global face_types_dict, predict_cases
@@ -96,6 +99,53 @@ def cal_precision_recall(list_label, list_pred):
     print("recall score: ", rc)
     print("confusion matrix: \n", cm)
 
+def cal_accuracy_params_for_cm(cm):
+    shape, shape = cm.shape
+    dict_tp = {}
+    dict_fp = {}
+    dict_tn = {}
+    dict_fn = {}
+    for i in range(shape):
+        for j in range(shape):
+            if i == j:
+                dict_tp[i] = cm[i][j]
+                dict_fp[i] = sum([cm[r][j] for r in range(shape) if r != i])
+                dict_fn[i] = sum([cm[i][c] for c in range(shape) if c != i])
+                dict_tn[i] = sum([cm[rc][rc] for rc in range(shape) if rc != i])
+    
+    dict_precision = {}
+    dict_recall = {}
+    dict_fpr = {}
+    for i in range(shape):
+        dict_precision[i] = dict_tp[i] / (dict_tp[i] + dict_fp[i])
+        dict_recall[i] = dict_tp[i] / (dict_tp[i] + dict_fn[i])
+        dict_fpr[i] = dict_fp[i] / (dict_fp[i] + dict_tn[i])
+    # dict_ = map(lambda x: x.update({"avr": sum(x.values())}), [dict_tp, dict_fp, dict_tn, dict_fn, dict_precision, dict_recall, dict_fpr])
+    for dict_ in [dict_tp, dict_fp, dict_tn, dict_fn, dict_precision, dict_recall, dict_fpr]:
+        dict_ = dict_.update({"avr": round(sum(dict_.values()) / shape, 2)})
+    
+    print("TP: ", dict_tp)
+    print("FP: ", dict_fp)
+    print("TN: ", dict_tn)
+    print("FN: ", dict_fn)
+    print("Precision: ", dict_precision)
+    print("Recall: ", dict_recall)
+    print("FPR: ", dict_fpr)
+    
+    # classes = [CLASSES[i] for i in dict_tp.keys()]
+    data = pd.DataFrame(data={
+        "classes": ["glasses", "mask", "normal", "AVR"],
+        "TP": [i for i in dict_tp.values()], 
+        "FP": [i for i in dict_fp.values()],
+        "TN": [i for i in dict_tn.values()],
+        "FN": [i for i in dict_fn.values()],
+        "precision": [i for i in dict_precision.values()],
+        "recall": [i for i in dict_recall.values()],
+        "FPR": [i for i in dict_fpr.values()]
+    })
+    print(data)
+    data.to_csv(os.path.join(CWD, "save_result", "%s_acc.csv" % os.path.basename(DIR)))
+    
 
 def save_result(dict_result: dict=None):
     assert dict_result is not None
@@ -167,6 +217,8 @@ for subdir, dirs, files in os.walk(DIR):
         multitask_to_true_false_cases(file_path, output, dict_subdir_result, list_all_pred)
         # single_task_to_false_cases(filename, output[0][0])
     dict_all_result[os.path.basename(subdir)] = dict_subdir_result
+
+cal_accuracy_params_for_cm(predict_cases)
 
 cal_precision_recall(list_all_label, list_all_pred)
 
