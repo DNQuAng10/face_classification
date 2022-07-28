@@ -1,0 +1,5 @@
+models/*
+results/*
+*/.DS_Store
+classify/*
+visualize/*
