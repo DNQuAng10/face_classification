@@ -46,7 +46,7 @@ def get_rd_tp(type="glasses"):
     print("save done...")
 
 if __name__ == "__main__":
-    # get_rd_tp(type="glasses")
-    NUMBER = 2000
-    get_rd_tp(type="mask")
+    get_rd_tp(type="glasses")
+    # NUMBER = 2000
+    # get_rd_tp(type="mask")
     # get_rd_tp(type="normal")

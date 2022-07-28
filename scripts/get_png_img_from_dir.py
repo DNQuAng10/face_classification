@@ -47,7 +47,7 @@ def get_tp_img(type="glasses"):
 def get_fp_img(type="glasses"):
     if type == "glasses":
         # glasses_fp_from_mask
-        fp_from_0 = "/home/dnq/Working/FWorking/14-far/glass_mask_normal_face_classify/test/face_classification/jpg/glasses_FP_from_mask_FP.csv"
+        fp_from_0 = "/home/dnq/Working/FWorking/14-far/glass_mask_normal_face_classify/test/face_classification/jpg/glasses_FP_from_mask_FP_new.csv"
         # glasses_fp_from_normal
         fp_from_1 = "/home/dnq/Working/FWorking/14-far/glass_mask_normal_face_classify/test/face_classification/jpg/glasses_FP_from_normal_FP.csv"
         dir_path_0 = MASK_TP
@@ -98,10 +98,10 @@ def get_fp_img(type="glasses"):
 
 
 if __name__ == "__main__":
-    get_tp_img("glasses")
-    get_tp_img("mask")
-    get_tp_img("normal")
+    # get_tp_img("glasses")
+    # get_tp_img("mask")
+    # get_tp_img("normal")
 
     get_fp_img("glasses")
-    get_fp_img("mask")
-    get_fp_img("normal")
+    # get_fp_img("mask")
+    # get_fp_img("normal")
