@@ -3,3 +3,6 @@ results/*
 */.DS_Store
 classify/*
 visualize/*
+*.zip
+classify_androids_video/*
+classify_eq_data/*

@@ -116,12 +116,14 @@ def cal_accuracy_params_for_cm(cm):
     dict_precision = {}
     dict_recall = {}
     dict_fpr = {}
+    dict_fnr = {}
     for i in range(shape):
         dict_precision[i] = dict_tp[i] / (dict_tp[i] + dict_fp[i])
         dict_recall[i] = dict_tp[i] / (dict_tp[i] + dict_fn[i])
         dict_fpr[i] = dict_fp[i] / (dict_fp[i] + dict_tn[i])
+        dict_fnr[i] = 1 - dict_recall[i]
     # dict_ = map(lambda x: x.update({"avr": sum(x.values())}), [dict_tp, dict_fp, dict_tn, dict_fn, dict_precision, dict_recall, dict_fpr])
-    for dict_ in [dict_tp, dict_fp, dict_tn, dict_fn, dict_precision, dict_recall, dict_fpr]:
+    for dict_ in [dict_tp, dict_fp, dict_tn, dict_fn, dict_precision, dict_recall, dict_fpr, dict_fnr]:
         dict_ = dict_.update({"avr": round(sum(dict_.values()) / shape, 2)})
     
     print("TP: ", dict_tp)
@@ -131,6 +133,7 @@ def cal_accuracy_params_for_cm(cm):
     print("Precision: ", dict_precision)
     print("Recall: ", dict_recall)
     print("FPR: ", dict_fpr)
+    print("FNR: ", dict_fnr)
     
     # classes = [CLASSES[i] for i in dict_tp.keys()]
     data = pd.DataFrame(data={
@@ -141,10 +144,12 @@ def cal_accuracy_params_for_cm(cm):
         "FN": [i for i in dict_fn.values()],
         "precision": [i for i in dict_precision.values()],
         "recall": [i for i in dict_recall.values()],
-        "FPR": [i for i in dict_fpr.values()]
+        "FPR": [i for i in dict_fpr.values()],
+        "FNR": [i for i in dict_fnr.values()]
     })
     print(data)
-    data.to_csv(os.path.join(CWD, "save_result", "%s_acc.csv" % os.path.basename(DIR)))
+    # data.to_csv(os.path.join(CWD, "save_result", "%s_acc.csv" % os.path.basename(DIR)))
+    data.to_excel(os.path.join(CWD, "save_result", "%s_acc.xlsx" % os.path.basename(DIR)))
     
 
 def save_result(dict_result: dict=None):

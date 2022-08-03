@@ -15,7 +15,10 @@ CWD = pathlib.Path(__file__).resolve().parent
 
 
 DIR = "/mnt/datadrive/quangdn/far/face_classification/data/sub_eval"
-SAVE = "classify"
+DIR = "/home/quangdn/far/data/extract_face_from_frame"
+DIR = "/home/quangdn/far/data/extract_face_from_image"
+SAVE = "classify_androids_video"
+SAVE = "classify_eq_data"
 
 predict_cases = np.zeros([3,3])
 
