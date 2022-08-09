@@ -149,7 +149,7 @@ def cal_accuracy_params_for_cm(cm):
     })
     print(data)
     # data.to_csv(os.path.join(CWD, "save_result", "%s_acc.csv" % os.path.basename(DIR)))
-    data.to_excel(os.path.join(CWD, "save_result", "%s_acc.xlsx" % os.path.basename(DIR)))
+    data.to_excel(os.path.join(CWD, "save_result", "%s_%s_acc.xlsx" % (os.path.basename(DIR), os.path.basename(ovn_model))))
     
 
 def save_result(dict_result: dict=None):
@@ -164,7 +164,7 @@ def save_result(dict_result: dict=None):
             })
             dict_data[k] = data
 
-    save_file = os.path.join(CWD, "save_result", "%s.xlsx" % os.path.basename(DIR))
+    save_file = os.path.join(CWD, "save_result", "%s-%s.xlsx" % (os.path.basename(DIR), os.path.basename(ovn_model)))
     with pd.ExcelWriter(save_file) as writer:
         for k, data in dict_data.items():
             data.to_excel(writer, sheet_name=k)
@@ -191,6 +191,18 @@ times = []
 INPUT_SIZE = (112, 112)
 
 ovn_model = "/home/quangdn/far/face_classification/models/112_Classify_Adam_Epoch_75_Batch_6750_95.657_97.667_Time_1634623345.5846994_checkpoint.xml"
+# v.0.0
+ovn_model = "/mnt/datadrive/quangdn/far/trained_models/112_Classify_Adam_Epoch_197_Batch_8077_95.258_98.877_Time_1659628469.711623_checkpoint.xml"
+# ovn_model = "/mnt/datadrive/quangdn/far/trained_models/112_Classify_Adam_Epoch_200_Batch_8200_95.426_99.045_Time_1659628613.133665_checkpoint.xml"
+# ovn_model = "/mnt/datadrive/quangdn/far/trained_models/112_Classify_Adam_Epoch_180_Batch_7380_95.291_98.996_Time_1659626529.3278854_checkpoint.xml"
+# v.0.1
+ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.1/112_Classify_Adam_Epoch_50_Batch_2600_94.862_96.474_Time_1659690931.2707672_checkpoint.xml"
+ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.1/112_Classify_Adam_Epoch_183_Batch_9516_96.723_98.687_Time_1659719729.6839921_checkpoint.xml"
+ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.1/112_Classify_Adam_Epoch_199_Batch_10348_96.533_98.920_Time_1659721905.793932_checkpoint.xml"
+# v.0.2
+ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_196_Batch_20580_97.703_99.532_Time_1659991050.0512657_checkpoint.xml"
+ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_188_Batch_19740_97.374_99.501_Time_1659988508.269691_checkpoint.xml"
+ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_97_Batch_10185_96.474_99.167_Time_1659965059.083403_checkpoint.xml"
 classify = OpenVinoModel(ovn_model, input_size=INPUT_SIZE)
 print("Loading model Done...")
 
@@ -234,7 +246,7 @@ fig = plt.figure(figsize=(3, 3))
 sn.heatmap(df_cm, annot=True, fmt=".5g")
 fig.tight_layout()
 # plt.show()
-plt.savefig(os.path.join(CWD, "save_result", "%s.png" % os.path.basename(DIR)))
+plt.savefig(os.path.join(CWD, "save_result", "%s_%s.png" % (os.path.basename(DIR), os.path.basename(ovn_model))))
 
 # subdir = [os.path.basename(sd) for sd in glob.glob("%s/*" % DIR) if os.path.isdir(sd)]
 # print(subdir)

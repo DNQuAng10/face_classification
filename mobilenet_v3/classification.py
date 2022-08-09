@@ -17,8 +17,11 @@ CWD = pathlib.Path(__file__).resolve().parent
 DIR = "/mnt/datadrive/quangdn/far/face_classification/data/sub_eval"
 DIR = "/home/quangdn/far/data/extract_face_from_frame"
 DIR = "/home/quangdn/far/data/extract_face_from_image"
+DIR = "/mnt/datadrive/quangdn/far/data/extract_face_from_frame"
 SAVE = "classify_androids_video"
 SAVE = "classify_eq_data"
+SAVE = "classify_800_videos"
+SAVE = "classify_full_videos"
 
 predict_cases = np.zeros([3,3])
 
@@ -27,6 +30,7 @@ times = []
 INPUT_SIZE = (112, 112)
 
 ovn_model = "/home/quangdn/far/face_classification/models/112_Classify_Adam_Epoch_75_Batch_6750_95.657_97.667_Time_1634623345.5846994_checkpoint.xml"
+ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.0/112_Classify_Adam_Epoch_197_Batch_8077_95.258_98.877_Time_1659628469.711623_checkpoint.xml"
 classify = OpenVinoModel(ovn_model, input_size=INPUT_SIZE)
 print("Loading model Done...")
 

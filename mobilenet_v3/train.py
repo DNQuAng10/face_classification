@@ -151,6 +151,9 @@ def train():
     NUM_BATCH_WARM_UP = len(train_loader) * NUM_EPOCH_WARM_UP
     # scheduler = CosineDecayLR(optimizer, T_max=10*len(train_loader), lr_init = config.LEARNING_RATE, lr_min = 1e-5, warmup = NUM_BATCH_WARM_UP)
 
+    print("==> Train: ", config.TRAIN_FILES)
+    print("==> Test: ", config.VALID_FILES)
+
     batch = 0
     step = 0
 
@@ -249,6 +252,8 @@ def train():
             # hat_valid_top1.update(hat_valid1.data.item(), inputs.size(0))
 
         print("=" * 60)
+        val_epoch_acc = (glasses_valid_top1.avg + mask_valid_top1.avg) / 2
+        writer.add_scalar("Training_Accuracy", val_epoch_acc, epoch + 1)
         print('Epoch: {}/{}\t'
               'Valid Glasses Prec@1 {glasses_top1.val:.3f} ({glasses_top1.avg:.3f})\t'
               'Valid Mask Prec@1 {mask_top1.val:.3f} ({mask_top1.avg:.3f})\t'
