@@ -1,3 +1,4 @@
+import argparse
 import time
 
 from OpenVinoModel import OpenVinoModel
@@ -99,7 +100,7 @@ def cal_precision_recall(list_label, list_pred):
     print("recall score: ", rc)
     print("confusion matrix: \n", cm)
 
-def cal_accuracy_params_for_cm(cm):
+def cal_accuracy_params_for_cm(cm, is_round=True):
     shape, shape = cm.shape
     dict_tp = {}
     dict_fp = {}
@@ -118,10 +119,16 @@ def cal_accuracy_params_for_cm(cm):
     dict_fpr = {}
     dict_fnr = {}
     for i in range(shape):
-        dict_precision[i] = dict_tp[i] / (dict_tp[i] + dict_fp[i])
-        dict_recall[i] = dict_tp[i] / (dict_tp[i] + dict_fn[i])
-        dict_fpr[i] = dict_fp[i] / (dict_fp[i] + dict_tn[i])
-        dict_fnr[i] = 1 - dict_recall[i]
+        if is_round:
+            dict_precision[i] = round(dict_tp[i] / (dict_tp[i] + dict_fp[i]), 2)
+            dict_recall[i] = round(dict_tp[i] / (dict_tp[i] + dict_fn[i]), 2)
+            dict_fpr[i] = round((dict_fp[i] / (dict_fp[i] + dict_tn[i])) * 100, 2)
+            dict_fnr[i] = (1 - dict_recall[i]) * 100
+        else:
+            dict_precision[i] = dict_tp[i] / (dict_tp[i] + dict_fp[i])
+            dict_recall[i] = dict_tp[i] / (dict_tp[i] + dict_fn[i])
+            dict_fpr[i] = (dict_fp[i] / (dict_fp[i] + dict_tn[i])) * 100
+            dict_fnr[i] = (1 - dict_recall[i]) * 100
     # dict_ = map(lambda x: x.update({"avr": sum(x.values())}), [dict_tp, dict_fp, dict_tn, dict_fn, dict_precision, dict_recall, dict_fpr])
     for dict_ in [dict_tp, dict_fp, dict_tn, dict_fn, dict_precision, dict_recall, dict_fpr, dict_fnr]:
         dict_ = dict_.update({"avr": round(sum(dict_.values()) / shape, 2)})
@@ -149,8 +156,10 @@ def cal_accuracy_params_for_cm(cm):
     })
     print(data)
     # data.to_csv(os.path.join(CWD, "save_result", "%s_acc.csv" % os.path.basename(DIR)))
-    data.to_excel(os.path.join(CWD, "save_result", "%s_%s_acc.xlsx" % (os.path.basename(DIR), os.path.basename(ovn_model))))
-    
+    if VERSION is not None:
+        data.to_excel(os.path.join(CWD, "save_result", f"v.{VERSION}", "%s_%s_acc.xlsx" % (os.path.basename(DIR), os.path.basename(ovn_model))))
+    else:
+        data.to_excel(os.path.join(CWD, "save_result", "%s_%s_acc.xlsx" % (os.path.basename(DIR), os.path.basename(ovn_model))))
 
 def save_result(dict_result: dict=None):
     assert dict_result is not None
@@ -164,92 +173,151 @@ def save_result(dict_result: dict=None):
             })
             dict_data[k] = data
 
-    save_file = os.path.join(CWD, "save_result", "%s-%s.xlsx" % (os.path.basename(DIR), os.path.basename(ovn_model)))
+    if VERSION is not None:
+        save_file = os.path.join(CWD, "save_result", f"v.{VERSION}", "%s-%s.xlsx" % (os.path.basename(DIR), os.path.basename(ovn_model)))
+    else:
+        save_file = os.path.join(CWD, "save_result", "%s-%s.xlsx" % (os.path.basename(DIR), os.path.basename(ovn_model)))
+
     with pd.ExcelWriter(save_file) as writer:
         for k, data in dict_data.items():
             data.to_excel(writer, sheet_name=k)
     print("save done at: ", save_file)
 
-face_types_dict = dict()
-face_types_dict["glasses"] = [10, 13, 16, 1, 4, 7]
-face_types_dict["mask"] = [12, 15, 18, 3, 6, 9]
-face_types_dict["normal"] = [22, 23, 24, 19, 20, 21]
-face_types_dict["hat"] = [11, 14, 17, 2, 5, 8]
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--eval_ds", help="Path to evaludate dataset", 
+                        type=str, default="/mnt/data/quangdn/far/face_classification/data/sub_eval_labeled_1")
+    parser.add_argument("-w", "--weight", help="Path to openvino weight", 
+                        type=str, default="/mnt/data/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_196_Batch_20580_97.703_99.532_Time_1659991050.0512657_checkpoint.xml")
+    parser.add_argument("-v", "--version", help="Version of weight if version is choosed, weight will auto loaded CHOICES: ['-1', '0.0', '0.1', '0.2', '0.3', '0.4', '1.0', '1.1', '1.2', '1.3'], DEFAULT: NONE", 
+                        choices=["-1", "0.0", "0.1", "0.2", "0.3", "0.4", "1.0", "1.1", "1.2", "1.3"], default=None)
+    parser.add_argument("--is_round", help="Round accuracy DEFAULT: TRUE", action="store_false")
+    args = parser.parse_args()
 
-DIR = "/mnt/datadrive/quangdn/far/face_classification/data/eval"
-DIR = "/mnt/datadrive/quangdn/far/face_classification/data/eval_1"
-DIR = "/mnt/datadrive/quangdn/far/face_classification/data/eval_png_0"
-DIR = "/mnt/datadrive/quangdn/far/face_classification/data/eval_png_1"
-# DIR = "/mnt/datadrive/quangdn/far/face_classification/data/test_eval_png_1"
-# DIR = "/mnt/datadrive/quangdn/far/face_classification/data/new_aligned"
-DIR = "/mnt/datadrive/quangdn/far/face_classification/data/sub_eval_labeled"
+    face_types_dict = dict()
+    face_types_dict["glasses"] = [10, 13, 16, 1, 4, 7]
+    face_types_dict["mask"] = [12, 15, 18, 3, 6, 9]
+    face_types_dict["normal"] = [22, 23, 24, 19, 20, 21]
+    face_types_dict["hat"] = [11, 14, 17, 2, 5, 8]
 
-predict_cases = np.zeros([3, 3])
+    # DIR = "/mnt/datadrive/quangdn/far/face_classification/data/eval"
+    # DIR = "/mnt/datadrive/quangdn/far/face_classification/data/eval_1"
+    # DIR = "/mnt/datadrive/quangdn/far/face_classification/data/eval_png_0"
+    # DIR = "/mnt/datadrive/quangdn/far/face_classification/data/eval_png_1"
+    # # DIR = "/mnt/datadrive/quangdn/far/face_classification/data/test_eval_png_1"
+    # # DIR = "/mnt/datadrive/quangdn/far/face_classification/data/new_aligned"
+    # DIR = "/mnt/datadrive/quangdn/far/face_classification/data/sub_eval_labeled"
+    # DIR = "/mnt/data/quangdn/far/face_classification/data/sub_eval_labeled_1"
+    DIR = args.eval_ds
+    IS_ROUND = args.is_round
+    VERSION = args.version
+    if VERSION is None:
+        ovn_model = args.weight
+    else:
+        save_result_dir = os.path.join(CWD, "save_result", f"v.{VERSION}")
+        if not os.path.exists(save_result_dir):
+            os.makedirs(save_result_dir)
+            
+        if VERSION == "-1":
+            # ovn_model = "/home/quangdn/far/face_classification/models/112_Classify_Adam_Epoch_75_Batch_6750_95.657_97.667_Time_1634623345.5846994_checkpoint.xml"
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.datnt/112_Classify_Adam_Epoch_75_Batch_6750_95.657_97.667_Time_1634623345.5846994_checkpoint.xml"
+        elif VERSION == "0.0":
+            # v.0.0
+            ovn_model = "/mnt/datadrive/quangdn/far/trained_models/112_Classify_Adam_Epoch_197_Batch_8077_95.258_98.877_Time_1659628469.711623_checkpoint.xml"
+            # ovn_model = "/mnt/datadrive/quangdn/far/trained_models/112_Classify_Adam_Epoch_200_Batch_8200_95.426_99.045_Time_1659628613.133665_checkpoint.xml"
+            # ovn_model = "/mnt/datadrive/quangdn/far/trained_models/112_Classify_Adam_Epoch_180_Batch_7380_95.291_98.996_Time_1659626529.3278854_checkpoint.xml"
+        elif VERSION == "0.1":
+            # v.0.1
+            # ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.1/112_Classify_Adam_Epoch_50_Batch_2600_94.862_96.474_Time_1659690931.2707672_checkpoint.xml"
+            # ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.1/112_Classify_Adam_Epoch_183_Batch_9516_96.723_98.687_Time_1659719729.6839921_checkpoint.xml"
+            ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.1/112_Classify_Adam_Epoch_199_Batch_10348_96.533_98.920_Time_1659721905.793932_checkpoint.xml"
+        elif VERSION == "0.2":
+            # v.0.2
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_196_Batch_20580_97.703_99.532_Time_1659991050.0512657_checkpoint.xml"
+            # ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_188_Batch_19740_97.374_99.501_Time_1659988508.269691_checkpoint.xml"
+            # ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_97_Batch_10185_96.474_99.167_Time_1659965059.083403_checkpoint.xml"
+        elif VERSION == "0.3":
+            # # v.0.3
+            # ovn_model = "/mnt/data/quangdn/far/trained_models/v.0.3/112_Classify_Adam_Epoch_191_Batch_24066_98.448_99.388_Time_1660044401.2665846_checkpoint.xml"
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.0.3/112_Classify_Adam_Epoch_197_v.0.3_Batch_24822_98.504_99.404_Time_1660045235.0492127_checkpoint.xml"
+        elif VERSION == "0.4":
+            # # v.0.4
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.0.4/112_Classify_Adam_Epoch_188_Batch_21620_98.263_99.347_Time_1660073353.1392345_checkpoint.xml"
+            # ovn_model = "/mnt/data/quangdn/far/trained_models/v.0.4/112_Classify_Adam_Epoch_189_Batch_21735_96.901_99.378_Time_1660073492.408608_checkpoint.xml"
+            # ovn_model = "/mnt/data/quangdn/far/trained_models/v.0.4/112_Classify_Adam_Epoch_191_Batch_21965_98.103_99.404_Time_1660073736.3311913_checkpoint.xml"
+        elif VERSION == "1.0":
+            # v.1.0
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.0/112_Classify_Adam_Epoch_198_Batch_22176_97.728_99.522_Time_1660156442.7692828_checkpoint.xml"
+            # ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.0/112_Classify_Adam_Epoch_185_Batch_20720_97.985_99.465_Time_1660154832.307503_checkpoint.xml"
+        elif VERSION == "1.1":
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.1/112_Classify_Adam_Epoch_147_Batch_16464_73.067_64.325_Time_1660644692.3265386_checkpoint.xml"
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.1/112_Classify_Adam_Epoch_197_Batch_22064_71.371_64.253_Time_1660651715.6633825_checkpoint.xml"
+        elif VERSION == "1.2":
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.2/112_Classify_Adam_Epoch_191_Batch_21774_97.959_99.486_Time_1660750499.4749315_checkpoint.xml"
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.2/112_Classify_Adam_Epoch_195_Batch_22230_98.031_99.409_Time_1660751043.7966943_checkpoint.xml"
+            # ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.2/112_Classify_Adam_Epoch_198_Batch_22572_97.034_99.486_Time_1660751451.8433118_checkpoint.xml"
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.2/112_Classify_Adam_Epoch_200_Batch_22800_97.579_99.414_Time_1660751719.103265_checkpoint.xml"
+        elif VERSION == "1.3":
+            # ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.3/112_Classify_Adam_Epoch_165_Batch_19140_98.407_99.316_Time_1660819704.0766041_checkpoint.xml"
+            ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.3/112_Classify_Adam_Epoch_200_Batch_23200_97.903_99.378_Time_1660824643.8839684_checkpoint.xml"
 
-times = []
+    predict_cases = np.zeros([3, 3])
 
-INPUT_SIZE = (112, 112)
+    times = []
 
-ovn_model = "/home/quangdn/far/face_classification/models/112_Classify_Adam_Epoch_75_Batch_6750_95.657_97.667_Time_1634623345.5846994_checkpoint.xml"
-# v.0.0
-ovn_model = "/mnt/datadrive/quangdn/far/trained_models/112_Classify_Adam_Epoch_197_Batch_8077_95.258_98.877_Time_1659628469.711623_checkpoint.xml"
-# ovn_model = "/mnt/datadrive/quangdn/far/trained_models/112_Classify_Adam_Epoch_200_Batch_8200_95.426_99.045_Time_1659628613.133665_checkpoint.xml"
-# ovn_model = "/mnt/datadrive/quangdn/far/trained_models/112_Classify_Adam_Epoch_180_Batch_7380_95.291_98.996_Time_1659626529.3278854_checkpoint.xml"
-# v.0.1
-ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.1/112_Classify_Adam_Epoch_50_Batch_2600_94.862_96.474_Time_1659690931.2707672_checkpoint.xml"
-ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.1/112_Classify_Adam_Epoch_183_Batch_9516_96.723_98.687_Time_1659719729.6839921_checkpoint.xml"
-ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.1/112_Classify_Adam_Epoch_199_Batch_10348_96.533_98.920_Time_1659721905.793932_checkpoint.xml"
-# v.0.2
-ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_196_Batch_20580_97.703_99.532_Time_1659991050.0512657_checkpoint.xml"
-ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_188_Batch_19740_97.374_99.501_Time_1659988508.269691_checkpoint.xml"
-ovn_model = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_97_Batch_10185_96.474_99.167_Time_1659965059.083403_checkpoint.xml"
-classify = OpenVinoModel(ovn_model, input_size=INPUT_SIZE)
-print("Loading model Done...")
+    INPUT_SIZE = (112, 112)    
 
-dict_all_result = {}
-list_all_label = []
-list_all_pred = []
-for subdir, dirs, files in os.walk(DIR):
-    dict_subdir_result = {}
-    for filename in tqdm.tqdm(files):
-        if os.path.basename(subdir) == "glasses":
-            label = 0
-        elif os.path.basename(subdir) == "mask":
-            label = 1
-        elif os.path.basename(subdir) == "normal":
-            label = 2
-        list_all_label.append(label)
-        if pathlib.Path(filename).suffix not in [".jpg", ".png"]:
-            continue
-        file_path = os.path.join(subdir, filename)
-        face = cv2.imread(file_path)
-        # face = cv2.imread(file_path, cv2.IMREAD_UNCHANGED)
-        # face = cv2.cvtColor(face, cv2.COLOR_BGRA2BGR)
-        w, h, c = face.shape
-        if face is None:
-            continue
-        t = time.time()
-        output = np.array(classify.predict(face))
-        times.append(time.time() - t)
-        multitask_to_true_false_cases(file_path, output, dict_subdir_result, list_all_pred)
-        # single_task_to_false_cases(filename, output[0][0])
-    dict_all_result[os.path.basename(subdir)] = dict_subdir_result
+    print("MODEL: ", ovn_model)
+    classify = OpenVinoModel(ovn_model, input_size=INPUT_SIZE)
+    print("Loading model Done...")
 
-cal_accuracy_params_for_cm(predict_cases)
+    dict_all_result = {}
+    list_all_label = []
+    list_all_pred = []
+    for subdir, dirs, files in os.walk(DIR):
+        dict_subdir_result = {}
+        for filename in tqdm.tqdm(files):
+            if os.path.basename(subdir) == "glasses":
+                label = 0
+            elif os.path.basename(subdir) == "mask":
+                label = 1
+            elif os.path.basename(subdir) == "normal":
+                label = 2
+            list_all_label.append(label)
+            if pathlib.Path(filename).suffix not in [".jpg", ".png"]:
+                continue
+            file_path = os.path.join(subdir, filename)
+            face = cv2.imread(file_path)
+            # face = cv2.imread(file_path, cv2.IMREAD_UNCHANGED)
+            # face = cv2.cvtColor(face, cv2.COLOR_BGRA2BGR)
+            w, h, c = face.shape
+            if face is None:
+                continue
+            t = time.time()
+            output = np.array(classify.predict(face))
+            times.append(time.time() - t)
+            multitask_to_true_false_cases(file_path, output, dict_subdir_result, list_all_pred)
+            # single_task_to_false_cases(filename, output[0][0])
+        dict_all_result[os.path.basename(subdir)] = dict_subdir_result
 
-cal_precision_recall(list_all_label, list_all_pred)
+    cal_accuracy_params_for_cm(predict_cases, is_round=IS_ROUND)
 
-print("AVG time:", np.array(times).mean())
-df_cm = pd.DataFrame(predict_cases, columns=["Glass\npredicted", "Mask\npredicted", "Normal\npredicted"],
-                     index=["Glass", "Mask", "Normal"])
-fig = plt.figure(figsize=(3, 3))
-sn.heatmap(df_cm, annot=True, fmt=".5g")
-fig.tight_layout()
-# plt.show()
-plt.savefig(os.path.join(CWD, "save_result", "%s_%s.png" % (os.path.basename(DIR), os.path.basename(ovn_model))))
+    cal_precision_recall(list_all_label, list_all_pred)
 
-# subdir = [os.path.basename(sd) for sd in glob.glob("%s/*" % DIR) if os.path.isdir(sd)]
-# print(subdir)
+    print("AVG time:", np.array(times).mean())
+    df_cm = pd.DataFrame(predict_cases, columns=["Glass\npredicted", "Mask\npredicted", "Normal\npredicted"],
+                        index=["Glass", "Mask", "Normal"])
+    fig = plt.figure(figsize=(3, 3))
+    sn.heatmap(df_cm, annot=True, fmt=".5g")
+    fig.tight_layout()
+    # plt.show()
+    if VERSION is not None:
+        plt.savefig(os.path.join(CWD, "save_result", f"v.{VERSION}", "%s_%s.png" % (os.path.basename(DIR), os.path.basename(ovn_model))))
+    else:
+        plt.savefig(os.path.join(CWD, "save_result", "%s_%s.png" % (os.path.basename(DIR), os.path.basename(ovn_model))))
 
-# print(dict_all_result.keys(), [len(v) for k, v in dict_all_result.items()])
-save_result(dict_all_result)
+    # subdir = [os.path.basename(sd) for sd in glob.glob("%s/*" % DIR) if os.path.isdir(sd)]
+    # print(subdir)
+
+    # print(dict_all_result.keys(), [len(v) for k, v in dict_all_result.items()])
+    save_result(dict_all_result)

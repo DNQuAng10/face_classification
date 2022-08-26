@@ -253,7 +253,7 @@ def train():
 
         print("=" * 60)
         val_epoch_acc = (glasses_valid_top1.avg + mask_valid_top1.avg) / 2
-        writer.add_scalar("Training_Accuracy", val_epoch_acc, epoch + 1)
+        writer.add_scalar("Validate_Accuracy", val_epoch_acc, epoch + 1)
         print('Epoch: {}/{}\t'
               'Valid Glasses Prec@1 {glasses_top1.val:.3f} ({glasses_top1.avg:.3f})\t'
               'Valid Mask Prec@1 {mask_top1.val:.3f} ({mask_top1.avg:.3f})\t'

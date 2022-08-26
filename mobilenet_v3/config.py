@@ -1,8 +1,15 @@
 class Config:
-    MODEL_ROOT = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/all"
-    LOG_ROOT = "/home/quangdn/far/face_classification/log/v.0.2"
-    TRAIN_FILES = "/mnt/datadrive/quangdn/far/data/train_v0.2"
-    VALID_FILES = "/mnt/datadrive/quangdn/far/data/test"
+    # GPU3
+    # MODEL_ROOT = "/mnt/datadrive/quangdn/far/trained_models/v.0.2/all"
+    # LOG_ROOT = "/home/quangdn/far/face_classification/log/v.0.2"
+    # TRAIN_FILES = "/mnt/datadrive/quangdn/far/data/train_v0.2"
+    # VALID_FILES = "/mnt/datadrive/quangdn/far/data/test"
+
+    # GPU2
+    MODEL_ROOT = "/mnt/data/quangdn/far/trained_models/v.1.3/all"
+    LOG_ROOT = "/home/quangdn/far/face_classification/log/v.1.3"
+    TRAIN_FILES = "/mnt/data/quangdn/far/data/train_v1.3"
+    VALID_FILES = "/mnt/data/quangdn/far/data/test"
 
     PRETRAINED_MODEL = None
 
