@@ -42,10 +42,41 @@ def save_fn_img(save_file, type="glasses"):
             # print("save at: ", save_img_path)
     print("Save visualize at: ", os.path.basename(os.path.basename(save_dir)))
 
+def save_tp_img(save_file, type="glasses"):
+    data = pd.read_excel(save_file, sheet_name=type, engine="openpyxl")
+    # print(data)
+    file_name = os.path.basename(save_file).replace(pathlib.Path(save_file).suffix, "")
+    try:
+        eval_ds_name = file_name.split("-")[0]
+        weight_name = file_name.split("-")[1]
+    except:
+        eval_ds_name = file_name
+        weight_name = "best"        
+
+    for i in tqdm.tqdm(range(len(data)), total=len(data)):
+        if data["label"][i] == data["pred"][i]:
+            if device == "gpu3":
+                img = cv.imread(data["image path"][i])
+            elif device == "gpu2":
+                img = cv.imread(str(data["image path"][i]).replace("datadrive", "data"))
+            # text = f"label: {data["label"][i]} pred: {data["pred"][i]}"
+            # cv.putText(img, text, ())
+            save_dir = os.path.join(
+                CWD, "visualize", 
+                eval_ds_name, weight_name, 
+                "{}_TP".format(type))
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir) 
+            save_img_path = os.path.join(save_dir, "{}.jpg".format(os.path.basename(data["image path"][i])))
+            cv.imwrite(save_img_path, img)
+            # print("save at: ", save_img_path)
+    print("Save visualize at: ", os.path.basename(os.path.basename(save_dir)))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", help="Path to save classification result excel files", type=str)
     parser.add_argument("-e", "--gpu", help="Run on ['gpu2', 'gpu3'] DEFAULT: gpu2", choices=["gpu2", "gpu3"], type=str, default="gpu2")
+    parser.add_argument("-m", "--mode", help="Visualize TP or FP ['tp', 'fp']", choices=["tp", "fp"], default="fp")
     args = parser.parse_args()
     # save_file = "/home/quangdn/far/face_classification/Torch_MobilenetV3/save_result/eval.xlsx"
     # save_file = "/home/quangdn/far/face_classification/Torch_MobilenetV3/save_result/sub_eval_labeled.xlsx"
@@ -57,7 +88,10 @@ if __name__ == "__main__":
 
     save_file = args.input
     device = args.gpu
+    mode = args.mode
 
     for i in ["glasses", "mask", "normal"]:
-        save_fn_img(save_file, type=i)
-    
+        if mode == "fp":
+            save_fn_img(save_file, type=i)
+        elif mode == "tp":
+            save_tp_img(save_file, type=i)
