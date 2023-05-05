@@ -28,6 +28,8 @@ def multitask_to_true_false_cases(file_path, output, dict_results: dict=None, li
     
     dict_result = {}
     dir_name = os.path.basename(os.path.dirname(file_path))
+    print("output_classify: ", output_classify)
+    print("dir:", dir_name)
     if dir_name == "glasses":
         if output_classify[0] == 1:
             predict_cases[0][0] += 1
@@ -190,7 +192,7 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--weight", help="Path to openvino weight", 
                         type=str, default="/mnt/data/quangdn/far/trained_models/v.0.2/112_Classify_Adam_Epoch_196_Batch_20580_97.703_99.532_Time_1659991050.0512657_checkpoint.xml")
     parser.add_argument("-v", "--version", help="Version of weight if version is choosed, weight will auto loaded CHOICES: ['-1', '0.0', '0.1', '0.2', '0.3', '0.4', '1.0', '1.1', '1.2', '1.3'], DEFAULT: NONE", 
-                        choices=["-1", "0.0", "0.1", "0.2", "0.3", "0.4", "1.0", "1.1", "1.2", "1.3"], default=None)
+                        choices=["-1", "0.0", "0.1", "0.2", "0.3", "0.4", "1.0", "1.1", "1.2", "1.3", "2.5"], default="2.5")
     parser.add_argument("--is_round", help="Round accuracy DEFAULT: TRUE", action="store_false")
     args = parser.parse_args()
 
@@ -260,6 +262,9 @@ if __name__ == "__main__":
         elif VERSION == "1.3":
             # ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.3/112_Classify_Adam_Epoch_165_Batch_19140_98.407_99.316_Time_1660819704.0766041_checkpoint.xml"
             ovn_model = "/mnt/data/quangdn/far/trained_models/v.1.3/112_Classify_Adam_Epoch_200_Batch_23200_97.903_99.378_Time_1660824643.8839684_checkpoint.xml"
+        elif VERSION == "2.5":
+            ovn_model = "/home/quangdn/frs_mobile/gitlab/face_classification/mobilenet_v3/models/v.2.5/ovn/112_Classify_Adam_Epoch_197_Batch_21079_78.955_86.377_Time_1664504358.4962163_checkpoint.xml"
+            feat_path = "/home/quangdn/frs_mobile/gitlab/face_classification/mobilenet_v3/models/v.2.5/ovn/112_Classify_Adam_Epoch_197_Batch_21079_78.955_86.377_Time_1664504358.4962163_checkpoint.xml.pkl"
 
     predict_cases = np.zeros([3, 3])
 
@@ -274,6 +279,7 @@ if __name__ == "__main__":
     dict_all_result = {}
     list_all_label = []
     list_all_pred = []
+    dict_pred_output = {}
     for subdir, dirs, files in os.walk(DIR):
         dict_subdir_result = {}
         for filename in tqdm.tqdm(files):
@@ -295,10 +301,17 @@ if __name__ == "__main__":
                 continue
             t = time.time()
             output = np.array(classify.predict(face))
+            print("output: ", output, output.shape)
+            dict_pred_output[file_path] = output
             times.append(time.time() - t)
             multitask_to_true_false_cases(file_path, output, dict_subdir_result, list_all_pred)
             # single_task_to_false_cases(filename, output[0][0])
         dict_all_result[os.path.basename(subdir)] = dict_subdir_result
+
+    import pickle
+    with open(feat_path, "wb") as f:
+        pickle.dump(dict_pred_output, f)
+    print("save feature at: ", feat_path)
 
     cal_accuracy_params_for_cm(predict_cases, is_round=IS_ROUND)
 
